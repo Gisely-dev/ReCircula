@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReCircula — coleta de recicláveis da vizinhança</title>
+
+<!-- Fontes: Fraunces (serifada, pros títulos) + IBM Plex Sans (corpo)
+     + JetBrains Mono (pra dados: horários, quantidades, contadores) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- aviso que só aparece via JS caso o Firebase não esteja configurado corretamente -->
+<div id="avisoFirebase"></div>
+
+<!-- ===================== CABEÇALHO ===================== -->
+<header>
+  <div class="header-inner">
+    <a href="#topo" class="marca">
+      <!-- símbolo minimalista de reciclagem: três setas em arco, traço fino -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3 L14.5 7.5 L11.5 7.5 Z" fill="currentColor" stroke="none"/>
+        <path d="M9 5.5 L4.5 13 A9 9 0 0 0 6 17"/>
+        <path d="M4.5 17.5 L2 13.5 M4.5 17.5 L8.7 16.3"/>
+        <path d="M15 5.5 L19.5 13 A9 9 0 0 1 18 17"/>
+        <path d="M19.5 17.5 L22 13.5 M19.5 17.5 L15.3 16.3"/>
+      </svg>
+      ReCircula
+      <span class="sub">coleta seletiva de vizinhança</span>
+    </a>
+    <button class="btn-publicar" id="btnAbrirForm">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Publicar material
+    </button>
+  </div>
+</header>
+
+<!-- ===================== HERO / TESE DA PÁGINA ===================== -->
+<section class="hero" id="topo">
+  <div>
+    <span class="etiqueta-hero">Rede de coleta seletiva</span>
+    <h1>Aquele material que tá <em>parado na sua casa</em> pode virar matéria-prima hoje.</h1>
+    <p class="lead">
+      Quem precisa desse material encontra, combina e retira! Sem intermediário, sem desperdício.
+    </p>
+  </div>
+
+  <!-- painel de estatísticas + barra de distribuição por categoria,
+       calculado a partir dos posts reais (ver script.js) -->
+  <div class="stats" id="painelStats">
+    <div class="stats-grade">
+      <div class="stat-item"><span class="num" id="statPosts">0</span><span class="rotulo">materiais agora</span></div>
+      <div class="stat-item"><span class="num" id="statKg">0 kg</span><span class="rotulo">desviados de aterro</span></div>
+      <div class="stat-item"><span class="num" id="statBairros">0</span><span class="rotulo">bairros ativos</span></div>
+    </div>
+    <div class="distribuicao" id="distribuicao"></div>
+    <div class="distribuicao-legenda" id="distribuicaoLegenda"></div>
+    <div class="ods">
+      <span class="badge-ods">ODS 11 · Cidades sustentáveis</span>
+      <span class="badge-ods">ODS 12 · Consumo responsável</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTEÚDO PRINCIPAL ===================== -->
+<div class="conteudo">
+
+  <!-- ---------- COLUNA DO FEED ---------- -->
+  <main>
+
+    <!-- formulário de nova publicação, fica oculto até o usuário clicar em "Publicar material" -->
+    <form class="form-post" id="formPost">
+      <h3>O que você tem pra oferecer?</h3>
+      <p class="dica">Sua publicação fica visível pra qualquer pessoa da rede que precise desse material.</p>
+
+      <div class="linha-dupla">
+        <div class="campo">
+          <label for="campoNome">Seu nome</label>
+          <input type="text" id="campoNome" placeholder="Ex: Marina" required maxlength="40">
+        </div>
+        <div class="campo">
+          <label for="campoBairro">Bairro / referência</label>
+          <input type="text" id="campoBairro" placeholder="Ex: Candeias, próx. à feira" required maxlength="60">
+        </div>
+      </div>
+
+      <div class="linha-dupla">
+        <div class="campo">
+          <label for="campoTipo">Tipo de material</label>
+          <select id="campoTipo" required></select>
+        </div>
+        <div class="campo">
+          <label for="campoQtd">Quantidade aproximada</label>
+          <input type="text" id="campoQtd" placeholder="Ex: 3 sacos de 20L" required maxlength="40">
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="campoDesc">Detalhes pra quem for buscar</label>
+        <textarea id="campoDesc" placeholder="Ex: material limpo e separado, disponível das 8h às 18h, pode buscar no portão." maxlength="280"></textarea>
+      </div>
+
+      <div class="acoes-form">
+        <button type="button" class="btn-secundario" id="btnCancelarForm">Cancelar</button>
+        <button type="submit" class="btn-primario">Publicar</button>
+      </div>
+    </form>
+
+    <!-- filtros por categoria de material, preenchidos dinamicamente via JS -->
+    <div class="filtros" id="filtros"></div>
+
+    <!-- o feed em si -->
+    <div class="feed" id="feed">
+      <!-- preenchido via JS -->
+    </div>
+  </main>
+
+  <!-- ---------- BARRA LATERAL ---------- -->
+  <aside class="lateral">
+    <div class="painel sobre">
+      <h4>Sobre o ReCircula</h4>
+      <p>Uma rede simples pra ligar quem tem material reciclável disponível a quem pode reaproveitar, como catadores, cooperativas, artesãos ou vizinhos.</p>
+      <p>As publicações, curtidas e comentários feitos aqui são salvos no Firebase e aparecem em tempo real pra qualquer pessoa com o site aberto.</p>
+      <div class="aviso-dados">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+        <span>Ainda não tem chat disponível, por isso as combinações de retirada acontecem nos comentários, entre as próprias pessoas.</span>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<footer>ReCircula — feito pra apoiar o desenvolvimento sustentável, um material reaproveitado por vez.</footer>
+
+<div id="toast"></div>
+
+<!-- lógica da aplicação: carregado como "module" porque usa import/export
+     (necessário pro SDK do Firebase e pro firebase-config.js) -->
+<script type="module" src="script.js"></script>
+</body>
+</html>
